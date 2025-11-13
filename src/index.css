@@ -1,0 +1,226 @@
+@import "tailwindcss";
+/* === Basic Styles === */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f2f5;
+  color: #1c1e21;
+}
+
+main {
+  max-width: 1200px;
+  min-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+h1 {
+  color: #1877f2;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 2rem;
+}
+
+h2 {
+  color: #333;
+  border-bottom: 2px solid #f0f2f5;
+  padding-bottom: 8px;
+  margin-top: 2rem;
+}
+
+/* === File Upload Section === */
+.file-upload-section {
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.file-upload-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.file-upload-section input[type='file'] {
+  font-size: 1rem;
+  color: #333;
+}
+
+/* === Dynamic Control Panel === */
+.dynamic-control-panel {
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.dynamic-control-panel h2 {
+  margin-top: 0;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-weight: 600;
+  color: #333;
+}
+
+.control-group select,
+.control-group input,
+.control-group button {
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #ccd0d5;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.control-group button {
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background-color: #1877f2;
+  color: white;
+}
+
+.control-group button:hover:not(:disabled) {
+  background-color: #166fe5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.control-group button:disabled {
+  background-color: #ccd0d5;
+  cursor: not-allowed;
+}
+
+.control-group .sort-direction {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.control-group .sort-direction select {
+  flex: 1;
+}
+
+/* === Data Table Section === */
+#data-content {
+  margin-top: 2rem;
+}
+
+.data-table-wrapper {
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* Prevents columns from resizing weirdly */
+}
+
+th,
+td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f2f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+.table-footer {
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
+  color: #606770;
+  background-color: #f9f9f9;
+  border-top: 1px solid #ddd;
+}
+
+/* === Loading Indicator === */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: #606770;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1877f2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Error Component === */
+.error-modal {
+  text-align: center;
+  padding: 2rem;
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: 8px;
+}
+
+.error-modal h2 {
+  color: #faad14;
+  margin-top: 0;
+}
+
+.error-modal p {
+  color: #d46b08;
+  font-size: 1.1rem;
+}
+
