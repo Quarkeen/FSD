@@ -376,6 +376,7 @@ function App() {
               onProcess={handleProcessRequest}
               hiddenColumns={hiddenColumns}
               worker={handleProcessRequest.worker} // Pass worker reference
+              data={displayData}
             />
           )}
 
