@@ -377,7 +377,7 @@ function TabContent({
       {/* Undo/Redo & Edit Mode */}
       {dataSummary && displayData && !groupedData && !pivotData && !chartData && (
         <div className="mt-6 mb-4">
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 mb-4">
+          <div className="flex items-center justify-between p-4 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 mb-4">
             <div className="flex items-center gap-3">
               <button onClick={handleUndo} disabled={!canUndo} className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" title="Undo (Ctrl+Z)">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +397,7 @@ function TabContent({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between p-4 bg-linear-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${isEditMode ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
               <div>

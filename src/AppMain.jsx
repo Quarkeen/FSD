@@ -36,49 +36,49 @@ function PublicRoute({ children }) {
 }
 
 function AppMain() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <PublicRoute>
-              <Signup />
-            </PublicRoute>
-          }
-        />
+        {/* Public routes - only accessible when logged out */}
+        {!user && (
+          <>
+            <Route
+              path="/login"
+              element={<Login />}
+            />
+            <Route
+              path="/signup"
+              element={<Signup />}
+            />
+          </>
+        )}
 
-        {/* Protected main app */}
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <App />
-            </PrivateRoute>
-          }
-        />
+        {/* Protected main app - only accessible when logged in */}
+        {user && (
+          <>
+            <Route
+              path="/"
+              element={<App />}
+            />
+            <Route
+              path="/signout"
+              element={<SignOut />}
+            />
+          </>
+        )}
 
-        {/* Protected signout route */}
-        <Route
-          path="/signout"
-          element={
-            <PrivateRoute>
-              <SignOut />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Catch-all route: redirect based on auth */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Redirect based on auth state */}
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
       </Routes>
     </Router>
   );

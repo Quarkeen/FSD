@@ -24,7 +24,7 @@ function TabManager({ tabs, activeTab, onTabChange, onTabClose, onTabAdd }) {
             >
               {/* Tab Icon */}
               <svg
-                className="w-4 h-4 flex-shrink-0"
+                className="w-4 h-4 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -44,7 +44,7 @@ function TabManager({ tabs, activeTab, onTabChange, onTabClose, onTabAdd }) {
 
               {/* Modified Indicator */}
               {tab.modified && (
-                <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title="Unsaved changes" />
+                <div className="w-2 h-2 bg-orange-500 rounded-full shrink-0" title="Unsaved changes" />
               )}
 
               {/* Close Button */}
@@ -54,7 +54,7 @@ function TabManager({ tabs, activeTab, onTabChange, onTabClose, onTabAdd }) {
                     e.stopPropagation();
                     onTabClose(tab.id);
                   }}
-                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                  className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   title="Close tab"
                 >
                   <svg
@@ -79,7 +79,7 @@ function TabManager({ tabs, activeTab, onTabChange, onTabClose, onTabAdd }) {
         {/* Add Tab Button */}
         <button
           onClick={handleAddTab}
-          className="flex items-center gap-2 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors border-l border-gray-200 flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-3 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors border-l border-gray-200 shrink-0"
           title="Add new tab"
         >
           <svg

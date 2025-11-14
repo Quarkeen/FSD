@@ -66,14 +66,14 @@ export default function Signup() {
 
     try {
       await signup(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen bg-gradient-to-br from-green-50 to-teal-100 overflow-hidden">
+    <div className="relative flex justify-center items-center min-h-screen bg-linear-to-br from-green-50 to-teal-100 overflow-hidden">
       {/* Bubble container */}
       <div className="bubble-container absolute inset-0 pointer-events-none"></div>
       
@@ -204,7 +204,7 @@ export default function Signup() {
           </button>
         </div>
 
-        <button className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transform transition duration-200 active:scale-95 shadow-lg">
+        <button className="w-full bg-linear-to-r from-green-600 to-teal-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transform transition duration-200 active:scale-95 shadow-lg">
           Create Account
         </button>
 

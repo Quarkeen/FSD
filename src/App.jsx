@@ -67,7 +67,7 @@ function App() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <main className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
