@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -56,6 +57,10 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
+    if (!username.trim()) {
+      return setError("Username is required");
+    }
+
     if (password !== confirmPassword) {
       return setError("Passwords do not match");
     }
@@ -65,7 +70,7 @@ export default function Signup() {
     }
 
     try {
-      await signup(email, password);
+      await signup(email, password, username);
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -147,6 +152,20 @@ export default function Signup() {
             {error}
           </div>
         )}
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">
+            Username
+          </label>
+          <input
+            type="text"
+            placeholder="Choose your username"
+            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
 
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-semibold mb-2">
