@@ -200,7 +200,11 @@ self.onmessage = (event) => {
         console.log(`Unparsing for download took ${(downloadEndTime - startTime).toFixed(2)}ms`);
         self.postMessage({
           type: 'SUCCESS_DOWNLOAD',
-          payload: { csvString: csvString },
+          payload: { 
+            csvString: csvString,
+            customFileName: payload.customFileName,
+            destinationPath: payload.destinationPath,
+          },
         });
         break;
 
