@@ -34,7 +34,7 @@ export default function Signup() {
       const drift = (Math.random() - 0.5) * 100;
       bubble.style.setProperty('--drift', `${drift}px`);
       
-      const opacity = Math.random() * 0.3 + 0.1;
+      const opacity = Math.random() * 0.5 + 0.3;
       bubble.style.opacity = opacity;
       
       document.querySelector('.bubble-container')?.appendChild(bubble);
@@ -138,19 +138,21 @@ export default function Signup() {
       
       {/* Add Google Font and styles */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         
         .bubble {
           position: absolute;
           bottom: -150px;
-          background: linear-gradient(135deg, rgba(100, 255, 150, 0.3), rgba(100, 200, 255, 0.2));
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.5), rgba(240, 147, 251, 0.5));
           border-radius: 50%;
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(100, 255, 150, 0.4);
+          border: 1px solid rgba(102, 126, 234, 0.7);
           animation: float linear infinite;
           box-shadow: 
-            inset 0 0 20px rgba(100, 255, 150, 0.3),
-            0 0 20px rgba(100, 255, 150, 0.2);
+            inset 0 0 30px rgba(102, 126, 234, 0.5),
+            0 0 40px rgba(118, 75, 162, 0.4),
+            0 0 50px rgba(240, 147, 251, 0.3),
+            0 0 60px rgba(102, 126, 234, 0.2);
         }
         
         @keyframes float {
@@ -170,57 +172,17 @@ export default function Signup() {
           }
         }
 
-        .company-logo {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          margin-bottom: 8px;
-        }
-
-        .logo-icon {
-          width: 40px;
-          height: 40px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: 'Inter', sans-serif;
-          font-weight: 800;
-          font-size: 20px;
-          color: white;
-          letter-spacing: -1px;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .logo-text-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .logo-brand-name {
+        .simple-logo {
           font-family: 'Inter', sans-serif;
           font-weight: 700;
-          font-size: 22px;
+          font-size: 26px;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          line-height: 1;
           letter-spacing: -0.5px;
-        }
-
-        .logo-tagline {
-          font-family: 'Inter', sans-serif;
-          font-weight: 600;
-          font-size: 10px;
-          color: #6b7280;
-          text-transform: uppercase;
-          letter-spacing: 1.5px;
-          line-height: 1;
-          margin-top: 2px;
+          text-align: center;
+          margin-bottom: 8px;
         }
       `}</style>
 
@@ -230,22 +192,10 @@ export default function Signup() {
         noValidate
         className="relative z-10 bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition duration-300 hover:shadow-3xl border border-gray-100"
       >
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="company-logo">
-            <div className="logo-icon">
-              DCP
-            </div>
-            <div className="logo-text-container">
-              <div className="logo-brand-name">
-                Dynamic CSV
-              </div>
-              <div className="logo-tagline">
-                Processor
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Simple Logo */}
+        <h1 className="simple-logo">
+          Dynamic CSV Processor
+        </h1>
         
         <p className="text-center text-gray-600 mb-6 text-sm">
           Create your account to get started
