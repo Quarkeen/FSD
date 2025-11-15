@@ -3,6 +3,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 // https://vitejs.dev/config/
 export default defineConfig({
+  theme: {
+    extend: {
+      fontFamily: {
+        bebas: ["Bebas Neue", "sans-serif"],
+      },
+    },
+  },
   plugins: [react(),tailwindcss()],
 })
 

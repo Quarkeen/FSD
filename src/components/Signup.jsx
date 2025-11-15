@@ -2,6 +2,18 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
+function Meteor({ left, duration }) {
+  return (
+    <div
+      className="meteor-streak"
+      style={{
+        left: `${left}px`,
+        animationDuration: `${duration}s`,
+      }}
+    />
+  );
+}
+
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -12,62 +24,74 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [meteors, setMeteors] = useState([]);
 
-  // Create bubbles on component mount
+  // Create bubbles
   useEffect(() => {
     const createBubble = () => {
       const bubble = document.createElement("div");
       bubble.className = "bubble";
-      
+
       const size = Math.random() * 80 + 20;
       bubble.style.width = `${size}px`;
       bubble.style.height = `${size}px`;
-      
+
       const startPosition = Math.random() * 100;
       bubble.style.left = `${startPosition}%`;
-      
+
       const duration = Math.random() * 12 + 8;
       bubble.style.animationDuration = `${duration}s`;
-      
+
       const drift = (Math.random() - 0.5) * 100;
-      bubble.style.setProperty('--drift', `${drift}px`);
-      
+      bubble.style.setProperty("--drift", `${drift}px`);
+
       const opacity = Math.random() * 0.3 + 0.1;
       bubble.style.opacity = opacity;
-      
-      document.querySelector('.bubble-container')?.appendChild(bubble);
-      
+
+      document.querySelector(".bubble-container")?.appendChild(bubble);
+
+      setTimeout(() => bubble.remove(), duration * 1000);
+    };
+
+    const bubbleInterval = setInterval(createBubble, 500);
+    for (let i = 0; i < 15; i++) createBubble();
+
+    return () => {
+      clearInterval(bubbleInterval);
+    };
+  }, []);
+
+  // Create meteors using React state
+  useEffect(() => {
+    let active = true;
+
+    const addMeteor = () => {
+      if (!active) return;
+      const left = Math.random() * (window.innerWidth - 90);
+      const duration = Math.random() * 2 + 1.8;
+      const id = Math.random() + Date.now();
+      setMeteors((m) => [...m, { left, duration, id }]);
       setTimeout(() => {
-        bubble.remove();
+        setMeteors((m) => m.filter((meteor) => meteor.id !== id));
       }, duration * 1000);
     };
 
-    const intervalId = setInterval(() => {
-      createBubble();
-    }, 500);
+    const interval = setInterval(addMeteor, Math.random() * 1000 + 1800);
+    for (let i = 0; i < 3; i++) addMeteor();
 
-    for (let i = 0; i < 15; i++) {
-      createBubble();
-    }
-
-    return () => clearInterval(intervalId);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!username.trim()) {
-      return setError("Username is required");
-    }
-
-    if (password !== confirmPassword) {
-      return setError("Passwords do not match");
-    }
-
-    if (password.length < 6) {
-      return setError("Password must be at least 6 characters");
-    }
+    if (!username.trim()) return setError("Username is required");
+    if (password !== confirmPassword) return setError("Passwords do not match");
+    if (password.length < 6) return setError("Password must be at least 6 characters");
 
     try {
       await signup(email, password, username);
@@ -78,182 +102,199 @@ export default function Signup() {
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen bg-linear-to-br from-green-50 to-teal-100 overflow-hidden">
-      {/* Bubble container */}
-      <div className="bubble-container absolute inset-0 pointer-events-none"></div>
-      
-      {/* Add Google Font and styles */}
+    <div className="relative flex justify-center items-center min-h-screen bg-gray-100 overflow-hidden">
+      {/* Background Animation Container */}
+      <div className="bubble-container absolute inset-0 pointer-events-none z-0">
+        {meteors.map((meteor) => (
+          <Meteor key={meteor.id} left={meteor.left} duration={meteor.duration} />
+        ))}
+      </div>
+
+      {/* Styles */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@200;300;400;600;700&display=swap');
+
+        /* BUBBLE CONTAINER */
+        .bubble-container {
+          position: absolute;
+          inset: 0;
+          width: 100vw;
+          height: 100vh;
+          overflow: hidden;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* BUBBLES */
         .bubble {
           position: absolute;
-          bottom: -150px;
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+          bottom: -100px;
           border-radius: 50%;
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          animation: float linear infinite;
-          box-shadow: 
-            inset 0 0 20px rgba(255, 255, 255, 0.3),
-            0 0 20px rgba(100, 255, 150, 0.2);
+          background: rgba(221, 246, 255, 0.65);
+          box-shadow: 0 0 20px 6px rgba(173, 229, 255, 0.18);
+          pointer-events: none;
+          animation: rise linear forwards;
+          opacity: 0.3;
         }
-        
-        @keyframes float {
-          0% {
-            transform: translateY(0) translateX(0) rotate(0deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-100vh) translateX(var(--drift)) rotate(360deg);
-            opacity: 0;
+        @keyframes rise {
+          to {
+            transform: translateY(-120vh) translateX(var(--drift));
+            opacity: 0.2;
           }
         }
 
+        /* METEOR SHOOTING STAR */
+        .meteor-streak {
+          position: absolute;
+          top: -100px;
+          width: 2px;
+          height: 90px;
+          background: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.8),
+            rgba(255, 255, 255, 0)
+          );
+          transform: rotate(45deg);
+          animation: meteor-fall linear forwards;
+          pointer-events: none;
+          z-index: 2;
+        }
+        @keyframes meteor-fall {
+          0% {
+            opacity: 0;
+            transform: translateY(0) translateX(0) rotate(45deg);
+          }
+          10% { opacity: 1; }
+          100% {
+            opacity: 0;
+            transform: translateY(120vh) translateX(-60vh) rotate(45deg);
+          }
+        }
+
+        /* LOGO TEXT */
         .logo-text {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+          background: linear-gradient(135deg, #0d0d0d, #191919, #262626);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          background-clip: text;
-          font-family: 'Dancing Script', cursive;
-          font-weight: 700;
-          font-size: 3.75rem;
-          letter-spacing: 0.03em;
+          font-family: 'Raleway';
         }
       `}</style>
 
-      {/* Signup form */}
-      <form 
-        onSubmit={handleSubmit} 
-        className="relative z-10 bg-white p-8 rounded-2xl shadow-xl w-full max-w-md transform transition duration-300 hover:shadow-2xl"
+      {/* Signup Card */}
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-10 bg-white p-8 rounded-2xl shadow-xl w-full max-w-md transition hover:shadow-2xl"
       >
-        {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="logo-text" style={{ lineHeight: '1.2', marginBottom: '0px' }}>
+          <h1 className="logo-text text-4xl font-semibold leading-tight">
             Dynamic CSV
           </h1>
-          <h1 className="logo-text" style={{ lineHeight: '1.2' }}>
+          <h1 className="logo-text text-4xl font-semibold leading-tight">
             Processor
           </h1>
         </div>
-        
+
         <p className="text-center text-gray-600 mb-6 text-sm">
           Create your account to get started
         </p>
-        
+
         {error && (
           <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
 
+        {/* Username */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">
+          <label className="block text-gray-700 font-semibold mb-1 text-sm">
             Username
           </label>
           <input
             type="text"
+            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Choose your username"
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
           />
         </div>
 
+        {/* Email */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">
+          <label className="block text-gray-700 font-semibold mb-1 text-sm">
             Email Address
           </label>
           <input
             type="email"
+            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="abc@gmail.com"
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
         </div>
 
+        {/* Password */}
         <div className="mb-4 relative">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">
+          <label className="block text-gray-700 font-semibold mb-1 text-sm">
             Password
           </label>
           <input
             type={showPassword ? "text" : "password"}
+            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Create a strong password"
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
           <button
             type="button"
+            className="absolute right-3 top-10 text-gray-600"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
           >
             {showPassword ? "👁️" : "👁️‍🗨️"}
           </button>
         </div>
 
+        {/* Confirm Password */}
         <div className="mb-6 relative">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">
+          <label className="block text-gray-700 font-semibold mb-1 text-sm">
             Confirm Password
           </label>
           <input
             type={showConfirmPassword ? "text" : "password"}
+            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Re-enter your password"
-            className="w-full border-2 border-gray-300 p-3 rounded-lg focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            required
           />
           <button
             type="button"
+            className="absolute right-3 top-10 text-gray-600"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-10 text-gray-500 hover:text-gray-700"
           >
             {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
           </button>
         </div>
 
-        <button className="w-full bg-linear-to-r from-green-600 to-teal-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transform transition duration-200 active:scale-95 shadow-lg">
+        <button className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition active:scale-95">
           Create Account
         </button>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600 text-sm">
+        <div className="mt-6 text-center text-sm">
+          <p className="text-gray-600">
             Already have an account?{" "}
-            <Link 
-              to="/login" 
-              className="text-green-600 font-semibold hover:text-green-800 hover:underline transition"
-            >
+            <Link to="/login" className="text-black font-bold underline">
               Sign In
             </Link>
           </p>
         </div>
 
-        {/* Terms*/}
-        <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
+        <div className="mt-4 text-center text-xs">
+          <p>
             By signing up, you agree to our{" "}
-            <Link 
-              to="/terms" 
-              className="text-gray-700 hover:text-green-600 hover:underline transition font-semibold"
-            >
+            <Link className="text-black underline" to="/terms">
               Terms of Service
-            </Link>
-            {" "}and{" "}
-            <Link 
-              to="/privacy" 
-              className="text-gray-700 hover:text-green-600 hover:underline transition font-semibold"
-            >
+            </Link>{" "}
+            and{" "}
+            <Link className="text-black underline" to="/privacy">
               Privacy Policy
             </Link>
           </p>

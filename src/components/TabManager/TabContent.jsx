@@ -11,7 +11,12 @@ function TabContent({
   tabId, 
   isActive,
   onFileLoaded,
-  onDataModified 
+  onDataModified,
+  activeTool,
+  onClearTool,
+  toolName,
+  toolIcon,
+  toolDescription
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [dataSummary, setDataSummary] = useState(null);
@@ -89,11 +94,9 @@ function TabContent({
           type: "text/csv;charset=utf-8;",
         });
         
-        // Use custom filename from modal if provided, otherwise use default
         const fileName = payload.customFileName || `processed_${Date.now()}.csv`;
         const destinationPath = payload.destinationPath;
 
-        // If user selected a custom folder, use File System Access API
         if (destinationPath) {
           try {
             const fileHandle = await destinationPath.getFileHandle(fileName, { create: true });
@@ -109,15 +112,12 @@ function TabContent({
               title: "Download Error",
               message: "Failed to save to selected folder. Using default download.",
             });
-            // Fallback to browser download
             performBrowserDownload(blob, fileName);
           }
         } else {
-          // Use default browser download
           performBrowserDownload(blob, fileName);
         }
         
-        // Save CSV metadata to user's Firestore database with the custom filename
         saveCsvToHistory(fileName, blob.size).catch(err => {
           console.error("Failed to save CSV to history:", err);
         });
@@ -185,7 +185,6 @@ function TabContent({
     onFileLoaded?.(file.name);
   }, [tabId, onFileLoaded]);
 
-  // Helper function to perform browser download
   const performBrowserDownload = (blob, fileName) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -268,7 +267,6 @@ function TabContent({
     setIsEditMode(!isEditMode);
   }, [displayData, isEditMode]);
 
-  // Keyboard shortcuts (only when tab is active)
   useEffect(() => {
     if (!isActive) return;
 
@@ -348,7 +346,6 @@ function TabContent({
 
   return (
     <div className={`tab-content ${!isActive ? 'hidden' : ''}`}>
-      {/* Success Message */}
       {successMessage && (
         <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center justify-between">
           <div className="flex items-center">
@@ -361,20 +358,114 @@ function TabContent({
         </div>
       )}
 
-      {/* Upload Section */}
-      <section className="file-upload-section mb-6">
-        <h2 className="text-xl font-semibold mb-3 text-gray-800">1. Upload Your Data</h2>
-        <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:bg-indigo-50 transition bg-white">
-          <div className="flex flex-col items-center justify-center text-gray-500">
-            <svg className="w-12 h-12 mb-3 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            <p className="text-sm font-medium">Click or drag & drop your CSV file</p>
-            <p className="text-xs text-gray-400">Processing happens in your browser</p>
-          </div>
-          <input type="file" accept=".csv" onChange={handleFileChange} disabled={isProcessing} className="hidden" />
-        </label>
-      </section>
+     {/* Upload Section - Simplified Outer, Animated Inner */}
+<section className="file-upload-section mb-8">
+  <div className="flex items-center justify-between mb-5">
+      
+    <h2 className="flex  items-center justify-between  text-2xl font-bold text-gray-800">Upload Your Data</h2>
+
+  </div>
+  
+  <label 
+    className={`group relative flex flex-col items-center justify-center w-full h-56 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 overflow-hidden ${
+      isProcessing 
+        ? 'border-gray-300 bg-gray-50 cursor-not-allowed' 
+        : 'border-indigo-400 bg-gradient-to-br from-white via-indigo-50/30 to-white hover:border-indigo-600 hover:shadow-xl hover:scale-[1.01]'
+    }`}
+  >
+    {/* Keep the animated background gradient */}
+    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-purple-500/5 to-pink-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    
+    {/* Keep decorative circles but make them simpler */}
+    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200 rounded-full opacity-5 -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700"></div>
+    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-200 rounded-full opacity-5 -ml-12 -mb-12 group-hover:scale-125 transition-transform duration-700"></div>
+    
+    <div className="relative z-10 flex flex-col items-center justify-center text-gray-600 group-hover:text-indigo-700 transition-colors">
+      {/* Keep Upload Icon with all animations */}
+      <div className="mb-5 relative">
+        <div className="absolute inset-0 bg-indigo-400 rounded-full blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+        <svg 
+          className="w-20 h-20 text-indigo-500 relative z-10 transform group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-300" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" 
+          />
+        </svg>
+        {/* Keep pulsing ring */}
+        <div className="absolute inset-0 border-4 border-indigo-400 rounded-full animate-ping opacity-20"></div>
+      </div>
+      
+      {/* Text content */}
+      <p className="text-xl font-bold mb-2 group-hover:text-indigo-800 transition-colors">
+        Drop your CSV file here
+      </p>
+      <p className="text-sm text-gray-500 mb-4">
+        or click to browse from your computer
+      </p>
+      
+      {/* Keep animated button */}
+      <div className="mt-2 px-8 py-3 bg-white border-2 border-indigo-500 text-indigo-600 rounded-xl font-semibold group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-lg transform group-hover:scale-105 transition-all duration-300">
+        Browse Files
+      </div>
+      
+      {/* Keep file info */}
+      <div className="mt-5 flex items-center gap-2 text-xs text-gray-500">
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+        <span>CSV files • Browser processing • Private & Secure</span>
+      </div>
+    </div>
+    
+    <input 
+      type="file" 
+      accept=".csv" 
+      onChange={handleFileChange} 
+      disabled={isProcessing} 
+      className="hidden" 
+    />
+  </label>
+  
+  {/* Simplified info cards - cleaner design */}
+  <div className="mt-5 grid grid-cols-3 gap-4">
+    <div className="flex items-center justify-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
+      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+      <div className="text-left">
+        <p className="text-xs font-bold text-gray-800">Fast</p>
+        <p className="text-xs text-gray-500">Instant</p>
+      </div>
+    </div>
+    
+    <div className="flex items-center justify-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
+      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+      <div className="text-left">
+        <p className="text-xs font-bold text-gray-800">Secure</p>
+        <p className="text-xs text-gray-500">Private</p>
+      </div>
+    </div>
+    
+    <div className="flex items-center justify-center gap-2 p-3 bg-white rounded-lg border border-gray-200">
+      <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+      <div className="text-left">
+        <p className="text-xs font-bold text-gray-800">Powerful</p>
+        <p className="text-xs text-gray-500">12+ tools</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 
       {/* Data Summary */}
       {dataSummary && (
@@ -401,16 +492,52 @@ function TabContent({
         </div>
       )}
 
-      {/* Control Panel */}
-      {dataSummary && (
-        <DynamicControlPanel
-          summary={dataSummary}
-          isProcessing={isProcessing}
-          onProcess={handleProcessRequest}
-          hiddenColumns={hiddenColumns}
-          worker={handleProcessRequest.worker}
-          data={displayData}
-        />
+      {/* ONLY SHOW SELECTED TOOL */}
+      {dataSummary && activeTool && (
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-indigo-200">
+              <div className="flex items-center space-x-3">
+                <span className="text-3xl">{toolIcon}</span>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">{toolName}</h2>
+                  <p className="text-sm text-gray-600">{toolDescription}</p>
+                </div>
+              </div>
+              <button
+                onClick={onClearTool}
+                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium text-sm transition-colors"
+              >
+                Close Tool
+              </button>
+            </div>
+
+            <DynamicControlPanel
+              summary={dataSummary}
+              isProcessing={isProcessing}
+              onProcess={handleProcessRequest}
+              hiddenColumns={hiddenColumns}
+              worker={handleProcessRequest.worker}
+              data={displayData}
+              activeTool={activeTool}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Prompt to Select Tool */}
+      {dataSummary && !activeTool && (
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 border-2 border-dashed border-indigo-300">
+            <div className="text-center">
+              <span className="text-5xl mb-4 block">🛠️</span>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Select a Tool to Get Started</h3>
+              <p className="text-gray-600">
+                Click on any tool from the sidebar to begin processing your CSV data
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Undo/Redo & Edit Mode */}
@@ -459,7 +586,7 @@ function TabContent({
       <section className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            3. {isEditMode ? 'Edit Your Data' : 'View Your Data'}
+            {isEditMode ? '2. Edit Your Data' : '2. View Your Data'}
           </h2>
           {displayData && displayData.length > 0 && (
             <span className="text-sm text-gray-600">
