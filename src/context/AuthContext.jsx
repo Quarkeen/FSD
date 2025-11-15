@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
+  reload,
 } from "firebase/auth";
 
 const AuthContext = createContext();
@@ -16,7 +18,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const signup = (email, password) => createUserWithEmailAndPassword(auth, email, password);
+  const signup = async (email, password, username) => {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    // Set the username as display name
+    await updateProfile(result.user, { displayName: username });
+    // Reload user to ensure displayName is persisted in the auth token
+    await reload(result.user);
+    return result;
+  };
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
   const logout = () => signOut(auth);
 
@@ -28,11 +37,11 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const value = { user, signup, login, logout };
+  const value = { user, signup, login, logout, loading };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -5,21 +5,18 @@ console.log('Worker script loaded with PapaParse.');
 
 // --- Worker State ---
 let FULL_DATASET = [];
-let VIEW_DATASET = []; // Holds the filtered and sorted data
-let SECONDARY_DATASET = []; // Holds data from the second file for merging
-let DATA_SUMMARY = {}; // Holds headers, data types, etc.
+let VIEW_DATASET = [];
+let SECONDARY_DATASET = [];
+let DATA_SUMMARY = {};
 let currentSort = { key: null, direction: 'asc' };
 let currentFilter = { keyword: '' };
-let hiddenColumns = new Set(); // Track hidden columns
-let columnRenames = {}; // Track column renames: { oldName: newName }
-let conditionalFormats = []; // Track conditional formatting rules
-let ROW_ID_COUNTER = 0; // For unique row tracking
+let hiddenColumns = new Set();
+let columnRenames = {};
+let conditionalFormats = [];
+let ROW_ID_COUNTER = 0;
 
 // --- Helper Functions for Row ID Management ---
 
-/**
- * Adds a unique _rowId to each row for reliable tracking
- */
 function addRowIds(data) {
   return data.map((row) => ({
     _rowId: ROW_ID_COUNTER++,
@@ -27,9 +24,6 @@ function addRowIds(data) {
   }));
 }
 
-/**
- * Removes the _rowId from rows (for export/display)
- */
 function removeRowIds(data) {
   return data.map(row => {
     const { _rowId, ...rest } = row;
@@ -44,8 +38,7 @@ self.onmessage = (event) => {
 
   try {
     const startTime = performance.now();
-    let result; // Will hold { preview, formattingMap }
-    let resultPreview; // For simple cases
+    let result;
 
     switch (type) {
       case 'PARSE_FILE':
@@ -54,16 +47,11 @@ self.onmessage = (event) => {
           skipEmptyLines: true,
           dynamicTyping: true,
           complete: (results) => {
-            // Add unique IDs to each row
             FULL_DATASET = addRowIds(results.data);
             VIEW_DATASET = FULL_DATASET.slice();
-            
-            // Analyze data without the _rowId column
             DATA_SUMMARY = analyzeData(removeRowIds(FULL_DATASET));
-            
-            // Reset state
             hiddenColumns.clear();
-            hiddenColumns.add('_rowId'); // Hide the ID column from users
+            hiddenColumns.add('_rowId');
             columnRenames = {};
             conditionalFormats = [];
             SECONDARY_DATASET = [];
@@ -235,8 +223,6 @@ self.onmessage = (event) => {
           },
         });
         break;
-        
-      // --- NEW FEATURES START HERE ---
 
       case 'ADD_FORMULA_COLUMN':
         addFormulaColumn(payload.newColumnName, payload.formulaString);
@@ -255,7 +241,7 @@ self.onmessage = (event) => {
         break;
 
       case 'ADD_CONDITIONAL_FORMAT':
-        conditionalFormats.push(payload.rule); // rule = { column, operator, value, styleClass }
+        conditionalFormats.push(payload.rule);
         result = updateViewDataset();
         self.postMessage({
           type: 'SUCCESS_UPDATE',
@@ -267,7 +253,7 @@ self.onmessage = (event) => {
           },
         });
         break;
-        
+
       case 'CLEAR_CONDITIONAL_FORMATS':
         conditionalFormats = [];
         result = updateViewDataset();
@@ -292,7 +278,7 @@ self.onmessage = (event) => {
           },
         });
         break;
-        
+
       case 'GENERATE_PIVOT_TABLE':
         const pivotData = generatePivotTable(
           payload.rowKey, 
@@ -320,7 +306,7 @@ self.onmessage = (event) => {
           payload: { chartData },
         });
         break;
-        
+
       case 'PARSE_FILE_2_FOR_MERGE':
         Papa.parse(payload.file, {
           header: true,
@@ -353,20 +339,17 @@ self.onmessage = (event) => {
             formattingMap: result.formattingMap,
             rowCount: VIEW_DATASET.length,
             summary: DATA_SUMMARY,
-            message: `Merge complete. Total rows: ${FULL_DATASET.length}`,
+            message: `${payload.joinType.toUpperCase()} join complete. Total rows: ${FULL_DATASET.length}`,
           },
         });
         break;
 
-      // --- NEW: Handle edits from EditableTable ---
       case 'UPDATE_DATA_FROM_EDIT':
         if (!payload.data || !Array.isArray(payload.data)) {
           throw new Error('Invalid data provided for update.');
         }
-        
+
         const editedData = payload.data;
-        
-        // Re-add row IDs to edited data based on current VIEW_DATASET
         const editedWithIds = editedData.map((editedRow, index) => {
           const originalRow = VIEW_DATASET[index];
           if (originalRow && originalRow._rowId !== undefined) {
@@ -377,14 +360,13 @@ self.onmessage = (event) => {
           }
           return editedRow;
         });
-        
-        // Update FULL_DATASET using row IDs
+
         editedWithIds.forEach((editedRow) => {
           if (editedRow._rowId !== undefined) {
             const originalIndex = FULL_DATASET.findIndex(
               row => row._rowId === editedRow._rowId
             );
-            
+
             if (originalIndex !== -1) {
               FULL_DATASET[originalIndex] = { ...editedRow };
             } else {
@@ -394,16 +376,12 @@ self.onmessage = (event) => {
             console.warn('⚠️ Edited row missing _rowId:', editedRow);
           }
         });
-        
-        // Recalculate summary in case data types changed
+
         DATA_SUMMARY = analyzeData(removeRowIds(FULL_DATASET));
-        
-        // Refresh VIEW_DATASET to reflect changes
         result = updateViewDataset();
-        
+
         console.log('✅ Data synced from edit:', editedData.length, 'rows updated');
-        
-        // Send back updated data
+
         self.postMessage({
           type: 'SUCCESS_UPDATE',
           payload: {
@@ -414,8 +392,6 @@ self.onmessage = (event) => {
           },
         });
         break;
-
-      // --- NEW FEATURES END HERE ---
 
       default:
         throw new Error(`Unknown message type: ${type}`);
@@ -436,11 +412,9 @@ function updateViewDataset() {
   if (currentSort.key) {
     sortData(currentSort.key, currentSort.direction);
   }
-  
+
   const preview = VIEW_DATASET.slice(0, 20);
   const formattingMap = generateFormattingMap(preview);
-  
-  // Remove row IDs and apply column visibility before sending to UI
   const visiblePreview = removeRowIds(applyColumnVisibility(preview));
 
   return { preview: visiblePreview, formattingMap };
@@ -463,13 +437,12 @@ function analyzeData(data) {
 
     if (values.length > 0) {
       const firstValue = values[0];
-      
+
       if (typeof firstValue === 'number') {
         inferredType = 'number';
       } else if (typeof firstValue === 'boolean') {
         inferredType = 'boolean';
       } else if (typeof firstValue === 'string') {
-        // Check if it's a date
         const dateCheck = new Date(firstValue);
         if (!isNaN(dateCheck.getTime()) && firstValue.match(/\d{4}[-\/]\d{1,2}[-\/]\d{1,2}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4}/)) {
           inferredType = 'date';
@@ -523,7 +496,6 @@ function filterData(keyword) {
   }
 
   return FULL_DATASET.filter(row => {
-    // Don't search in _rowId
     return Object.entries(row).some(([key, value]) => {
       if (key === '_rowId') return false;
       return String(value || '').toLowerCase().includes(lowerCaseKeyword);
@@ -533,7 +505,7 @@ function filterData(keyword) {
 
 function applyColumnVisibility(data) {
   if (hiddenColumns.size === 0) return data;
-  
+
   return data.map(row => {
     const newRow = {};
     for (const [key, value] of Object.entries(row)) {
@@ -547,8 +519,7 @@ function applyColumnVisibility(data) {
 
 function renameColumn(oldName, newName) {
   if (!oldName || !newName || oldName === newName) return;
-  
-  // Update all datasets
+
   FULL_DATASET = FULL_DATASET.map(row => {
     const newRow = { ...row };
     if (oldName in newRow) {
@@ -567,34 +538,29 @@ function renameColumn(oldName, newName) {
     return newRow;
   });
 
-  // Update hidden columns
   if (hiddenColumns.has(oldName)) {
     hiddenColumns.delete(oldName);
     hiddenColumns.add(newName);
   }
 
-  // Update sort key if needed
   if (currentSort.key === oldName) {
     currentSort.key = newName;
   }
 
-  // Track rename
   columnRenames[oldName] = newName;
 }
 
 function removeDuplicates(columns = null) {
   const seen = new Set();
-  
+
   FULL_DATASET = FULL_DATASET.filter(row => {
-    // Exclude _rowId from duplicate check
     const checkRow = { ...row };
     delete checkRow._rowId;
-    
-    // If specific columns provided, only check those
+
     const key = columns && columns.length > 0
       ? columns.map(col => checkRow[col]).join('|')
       : Object.values(checkRow).join('|');
-    
+
     if (seen.has(key)) {
       return false;
     }
@@ -607,7 +573,6 @@ function handleMissingData(strategy, columns = null, fillValue = null) {
   const targetCols = columns || DATA_SUMMARY.headers;
 
   if (strategy === 'drop') {
-    // Remove rows with any missing values in target columns
     FULL_DATASET = FULL_DATASET.filter(row => {
       return targetCols.every(col => {
         const val = row[col];
@@ -615,18 +580,16 @@ function handleMissingData(strategy, columns = null, fillValue = null) {
       });
     });
   } else if (strategy === 'fill') {
-    // Fill missing values
     FULL_DATASET = FULL_DATASET.map(row => {
       const newRow = { ...row };
       targetCols.forEach(col => {
         const val = newRow[col];
         if (val === null || val === undefined || val === '') {
           const colType = DATA_SUMMARY.dataTypes[col];
-          
+
           if (fillValue !== null && fillValue !== undefined) {
             newRow[col] = fillValue;
           } else if (colType === 'number') {
-            // Fill with mean
             const values = FULL_DATASET
               .map(r => r[col])
               .filter(v => typeof v === 'number');
@@ -640,7 +603,6 @@ function handleMissingData(strategy, columns = null, fillValue = null) {
       return newRow;
     });
   } else if (strategy === 'forward-fill') {
-    // Forward fill: use previous row's value
     let lastValues = {};
     FULL_DATASET = FULL_DATASET.map(row => {
       const newRow = { ...row };
@@ -694,10 +656,7 @@ function computeAggregations(columns = null) {
   return results;
 }
 
-// --- ORIGINAL FEATURES (EXISTING) ---
-
 function addRow(rowData) {
-  // Ensure new row has all headers, even if null
   const newRow = {
     _rowId: ROW_ID_COUNTER++,
   };
@@ -717,22 +676,12 @@ function addColumn(columnName, defaultValue) {
   });
 }
 
-// --- NEW FEATURE HELPER FUNCTIONS ---
-
-/**
- * Creates a "safe" function from a user-provided formula string.
- * Replaces [Column Name] with row["Column Name"] for safe execution.
- * @param {string} formula - The user's formula, e.g., "[Price] * [Quantity]"
- * @returns {Function} A function that takes a 'row' object and returns the result.
- */
 function createSafeFormula(formula) {
   let parsedFormula = formula.replace(/\[([^\]]+)\]/g, (match, colName) => {
-    // Escape quotes in column names
     const safeColName = colName.replace(/"/g, '\\"');
     return `row["${safeColName}"]`;
   });
 
-  // A sandboxed function
   const formulaFunction = new Function('row', `
     try {
       const { PI, abs, acos, asin, atan, ceil, cos, exp, floor, log, max, min, pow, random, round, sin, sqrt, tan } = Math;
@@ -742,32 +691,22 @@ function createSafeFormula(formula) {
       return \`#ERROR!\`;
     }
   `);
-  
+
   return formulaFunction;
 }
 
-/**
- * Adds a new column to the dataset by applying a formula to each row.
- */
 function addFormulaColumn(newColumnName, formulaString) {
   if (DATA_SUMMARY.headers.includes(newColumnName)) {
     throw new Error(`Column "${newColumnName}" already exists.`);
   }
 
   const formulaFunc = createSafeFormula(formulaString);
-  
+
   FULL_DATASET.forEach(row => {
     row[newColumnName] = formulaFunc(row);
   });
 }
 
-/**
- * Checks if a value meets a condition.
- * @param {*} value - The cell's value.
- * @param {string} operator - e.g., '>', '<', '==', 'contains', '!='
- * @param {*} checkValue - The value to compare against.
- * @returns {boolean}
- */
 function checkCondition(value, operator, checkValue) {
   const numValue = parseFloat(value);
   const numCheckValue = parseFloat(checkValue);
@@ -794,11 +733,6 @@ function checkCondition(value, operator, checkValue) {
   }
 }
 
-/**
- * Generates a map of { rowIndex: { colName: styleClass } } for the provided data.
- * @param {Array<object>} data - The dataset to scan (usually the preview).
- * @returns {object} The formatting map.
- */
 function generateFormattingMap(data) {
   const map = {};
   if (conditionalFormats.length === 0) {
@@ -809,12 +743,12 @@ function generateFormattingMap(data) {
     conditionalFormats.forEach(format => {
       const { column, operator, value, styleClass } = format;
       const cellValue = row[column];
-      
+
       if (checkCondition(cellValue, operator, value)) {
         if (!map[rowIndex]) {
           map[rowIndex] = {};
         }
-        map[rowIndex][column] = styleClass; 
+        map[rowIndex][column] = styleClass;
       }
     });
   });
@@ -822,22 +756,15 @@ function generateFormattingMap(data) {
   return map;
 }
 
-/**
- * Groups data by a key and performs aggregations.
- * @param {string} groupKey - The column to group by.
- * @param {object} aggregations - e.g., { 'Sales': 'sum', 'Rating': 'mean' }
- * @returns {Array<object>} The new grouped data.
- */
 function groupAndAggregate(groupKey, aggregations) {
   const groups = new Map();
 
-  // Pass 1: Accumulate values
   FULL_DATASET.forEach(row => {
     const key = row[groupKey];
     if (!groups.has(key)) {
       groups.set(key, {});
     }
-    
+
     const group = groups.get(key);
 
     for (const [col, fn] of Object.entries(aggregations)) {
@@ -847,7 +774,7 @@ function groupAndAggregate(groupKey, aggregations) {
       if (!group[col]) {
         group[col] = { sum: 0, count: 0, min: Infinity, max: -Infinity, values: [] };
       }
-      
+
       const acc = group[col];
       acc.sum += val;
       acc.count++;
@@ -857,11 +784,10 @@ function groupAndAggregate(groupKey, aggregations) {
     }
   });
 
-  // Pass 2: Finalize calculations and build result
   const result = [];
   for (const [key, group] of groups.entries()) {
     const newRow = { [groupKey]: key };
-    
+
     for (const [col, fn] of Object.entries(aggregations)) {
       const acc = group[col];
       if (!acc) {
@@ -906,26 +832,17 @@ function groupAndAggregate(groupKey, aggregations) {
   return result;
 }
 
-/**
- * Generates data for a pivot table.
- * @param {string} rowKey - Column for rows.
- * @param {string} colKey - Column for columns.
- * @param {string} aggCol - Column to aggregate.
- * @param {string} aggFn - Aggregation function ('sum', 'count', 'mean').
- * @returns {Array<object>} The pivot table data.
- */
 function generatePivotTable(rowKey, colKey, aggCol, aggFn) {
   const pivot = new Map();
   const allColKeys = new Set();
 
-  // Pass 1: Build the nested map and discover all column keys
   FULL_DATASET.forEach(row => {
     const rKey = row[rowKey];
     const cKey = row[colKey];
     const val = row[aggCol];
 
     if (rKey === undefined || cKey === undefined) return;
-    
+
     allColKeys.add(cKey);
 
     if (!pivot.has(rKey)) {
@@ -937,7 +854,7 @@ function generatePivotTable(rowKey, colKey, aggCol, aggFn) {
       rowMap.set(cKey, { sum: 0, count: 0, values: [] });
     }
     const cell = rowMap.get(cKey);
-    
+
     if (typeof val === 'number') {
       cell.sum += val;
       cell.count++;
@@ -948,12 +865,11 @@ function generatePivotTable(rowKey, colKey, aggCol, aggFn) {
   });
 
   const sortedColKeys = Array.from(allColKeys).sort((a, b) => String(a).localeCompare(String(b)));
-  
-  // Pass 2: Flatten the map into a table
+
   const result = [];
   for (const [rKey, rowMap] of pivot.entries()) {
     const newRow = { [rowKey]: rKey };
-    
+
     for (const cKey of sortedColKeys) {
       const cell = rowMap.get(cKey);
       if (!cell || cell.count === 0) {
@@ -977,51 +893,44 @@ function generatePivotTable(rowKey, colKey, aggCol, aggFn) {
     }
     result.push(newRow);
   }
-  
-  result.sort((a,b) => String(a[rowKey]).localeCompare(String(b[rowKey])));
+
+  result.sort((a, b) => String(a[rowKey]).localeCompare(String(b[rowKey])));
 
   return result;
 }
 
-/**
- * Generates data formatted for a charting library.
- * @param {string} labelColumn - Column for chart labels (X-axis).
- * @param {Array<string>} dataColumns - Column(s) for chart data (Y-axis).
- * @param {string} chartType - 'bar', 'line', 'pie'.
- * @returns {object} Chart.js compatible data object.
- */
 function getChartData(labelColumn, dataColumns, chartType) {
   const sourceData = VIEW_DATASET;
-  
+
   const labels = [...new Set(sourceData.map(row => row[labelColumn]))];
-  labels.sort((a,b) => {
+  labels.sort((a, b) => {
     if (typeof a === 'number' && typeof b === 'number') return a - b;
     return String(a).localeCompare(String(b));
   });
 
   const datasets = dataColumns.map(col => {
     if (chartType === 'pie' && dataColumns.length === 1) {
-       const dataMap = new Map();
-       sourceData.forEach(row => {
-          const label = row[labelColumn];
-          const val = row[col];
-          if(typeof val === 'number') {
-            dataMap.set(label, (dataMap.get(label) || 0) + val);
-          }
-       });
-       return {
-         label: col,
-         data: labels.map(label => dataMap.get(label) || 0)
-       };
+      const dataMap = new Map();
+      sourceData.forEach(row => {
+        const label = row[labelColumn];
+        const val = row[col];
+        if (typeof val === 'number') {
+          dataMap.set(label, (dataMap.get(label) || 0) + val);
+        }
+      });
+      return {
+        label: col,
+        data: labels.map(label => dataMap.get(label) || 0)
+      };
     }
 
     const dataMap = new Map();
     sourceData.forEach(row => {
-       const label = row[labelColumn];
-       const val = row[col];
-       if(typeof val === 'number') {
-         dataMap.set(label, (dataMap.get(label) || 0) + val);
-       }
+      const label = row[labelColumn];
+      const val = row[col];
+      if (typeof val === 'number') {
+        dataMap.set(label, (dataMap.get(label) || 0) + val);
+      }
     });
 
     return {
@@ -1037,10 +946,10 @@ function getChartData(labelColumn, dataColumns, chartType) {
 }
 
 /**
- * Merges SECONDARY_DATASET into FULL_DATASET.
+ * UPDATED: Merges SECONDARY_DATASET into FULL_DATASET with ALL join types.
  * @param {string} key1 - The join key for FULL_DATASET.
  * @param {string} key2 - The join key for SECONDARY_DATASET.
- * @param {string} joinType - 'left', 'inner', 'right', 'outer'.
+ * @param {string} joinType - 'left', 'right', 'inner', 'outer', 'cross'.
  */
 function performMerge(key1, key2, joinType) {
   if (SECONDARY_DATASET.length === 0) {
@@ -1049,9 +958,11 @@ function performMerge(key1, key2, joinType) {
 
   const data1 = FULL_DATASET;
   const data2 = SECONDARY_DATASET;
-  
+
+  // Create a hash map from data2 for faster lookups
   const data2Map = new Map();
   const data2Headers = Object.keys(data2[0] || {}).filter(h => h !== key2);
+
   data2.forEach(row => {
     const key = row[key2];
     if (key !== null && key !== undefined) {
@@ -1063,32 +974,146 @@ function performMerge(key1, key2, joinType) {
   });
 
   const mergedData = [];
+  const matchedData2Keys = new Set();
 
-  if (joinType === 'left' || joinType === 'inner') {
+  // Helper function to merge two rows
+  const mergeRows = (row1, row2) => {
+    const merged = { ...row1 };
+    if (row2) {
+      data2Headers.forEach(header => {
+        const newHeader = header in row1 ? `${header}_2` : header;
+        merged[newHeader] = row2[header];
+      });
+    } else {
+      // Add null values for data2 columns
+      data2Headers.forEach(header => {
+        const newHeader = header in row1 ? `${header}_2` : header;
+        merged[newHeader] = null;
+      });
+    }
+    return merged;
+  };
+
+  // LEFT JOIN
+  if (joinType === 'left') {
     data1.forEach(row1 => {
       const joinVal = row1[key1];
       const matchingRows2 = data2Map.get(joinVal);
 
       if (matchingRows2 && matchingRows2.length > 0) {
         matchingRows2.forEach(row2 => {
-          const mergedRow = { ...row1 };
-          data2Headers.forEach(header => {
-            const newHeader = header in row1 ? `${header}_2` : header;
-            mergedRow[newHeader] = row2[header];
-          });
-          mergedData.push(mergedRow);
+          mergedData.push(mergeRows(row1, row2));
+          matchedData2Keys.add(joinVal);
         });
-      } else if (joinType === 'left') {
-        const mergedRow = { ...row1 };
-        data2Headers.forEach(header => {
-          const newHeader = header in row1 ? `${header}_2` : header;
-          mergedRow[newHeader] = null;
-        });
-        mergedData.push(mergedRow);
+      } else {
+        mergedData.push(mergeRows(row1, null));
       }
     });
   }
+  
+  // RIGHT JOIN
+  else if (joinType === 'right') {
+    data2.forEach(row2 => {
+      const joinVal = row2[key2];
+      const matchingRows1 = data1.filter(r => r[key1] === joinVal);
+      
+      if (matchingRows1.length > 0) {
+        matchingRows1.forEach(row1 => {
+          mergedData.push(mergeRows(row1, row2));
+        });
+      } else {
+        // No match in data1, add data2 row with nulls for data1 columns
+        const merged = {};
+        Object.keys(data1[0] || {}).forEach(header => {
+          merged[header] = null;
+        });
+        data2Headers.forEach(header => {
+          const newHeader = header in merged ? `${header}_2` : header;
+          merged[newHeader] = row2[header];
+        });
+        merged[key2] = joinVal;
+        mergedData.push(merged);
+      }
+    });
+  }
+  
+  // INNER JOIN
+  else if (joinType === 'inner') {
+    data1.forEach(row1 => {
+      const joinVal = row1[key1];
+      const matchingRows2 = data2Map.get(joinVal);
 
-  FULL_DATASET = mergedData;
+      if (matchingRows2 && matchingRows2.length > 0) {
+        matchingRows2.forEach(row2 => {
+          mergedData.push(mergeRows(row1, row2));
+        });
+      }
+      // If no match, row is dropped (inner join behavior)
+    });
+  }
+  
+  // FULL OUTER JOIN
+  else if (joinType === 'outer') {
+    // First add all matches and left-only rows
+    data1.forEach(row1 => {
+      const joinVal = row1[key1];
+      const matchingRows2 = data2Map.get(joinVal);
+
+      if (matchingRows2 && matchingRows2.length > 0) {
+        matchingRows2.forEach(row2 => {
+          mergedData.push(mergeRows(row1, row2));
+          matchedData2Keys.add(joinVal);
+        });
+      } else {
+        mergedData.push(mergeRows(row1, null));
+      }
+    });
+
+    // Then add right-only rows (rows in data2 that weren't matched)
+    data2.forEach(row2 => {
+      const joinVal = row2[key2];
+      if (!matchedData2Keys.has(joinVal)) {
+        const merged = {};
+        Object.keys(data1[0] || {}).forEach(header => {
+          merged[header] = null;
+        });
+        data2Headers.forEach(header => {
+          const newHeader = header in merged ? `${header}_2` : header;
+          merged[newHeader] = row2[header];
+        });
+        merged[key2] = joinVal;
+        mergedData.push(merged);
+      }
+    });
+  }
+  
+  // CROSS JOIN (Cartesian Product)
+  else if (joinType === 'cross') {
+    // Safety check for large cross joins
+    const estimatedRows = data1.length * data2.length;
+    if (estimatedRows > 100000) {
+      throw new Error(
+        `Cross join would create ${estimatedRows.toLocaleString()} rows, which may freeze your browser. ` +
+        `Maximum allowed: 100,000 rows. Please filter your data first.`
+      );
+    }
+    
+    console.log(`⚠️ Performing cross join: ${data1.length} × ${data2.length} = ${estimatedRows} rows`);
+    
+    data1.forEach(row1 => {
+      data2.forEach(row2 => {
+        mergedData.push(mergeRows(row1, row2));
+      });
+    });
+  }
+  
+  else {
+    throw new Error(`Unknown join type: ${joinType}`);
+  }
+
+  // Re-add row IDs to merged data
+  FULL_DATASET = addRowIds(mergedData);
   SECONDARY_DATASET = [];
+  
+  console.log(`✅ ${joinType.toUpperCase()} join complete: ${mergedData.length} rows created from ${data1.length} and ${data2.length} rows`);
 }

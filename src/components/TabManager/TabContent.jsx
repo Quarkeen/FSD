@@ -5,6 +5,7 @@ import LoadingIndicator from "../LoadingIndicator";
 import EditableTable from '../Table/EditableTable';
 import Error from "../Error";
 import { useUndoRedo } from '../../hooks/useUndoRedo';
+import { useCsvHistory } from '../../hooks/useCsvHistory';
 
 function TabContent({ 
   tabId, 
@@ -23,6 +24,7 @@ function TabContent({
   const [pivotData, setPivotData] = useState(null);
   const [chartData, setChartData] = useState(null);
   
+  const { saveCsvToHistory } = useCsvHistory();
   const workerRef = useRef(null);
 
   const {
@@ -44,7 +46,7 @@ function TabContent({
       { type: "module" }
     );
 
-    workerRef.current.onmessage = (event) => {
+    workerRef.current.onmessage = async (event) => {
       const { type, payload } = event.data;
       console.log(`[Tab ${tabId}] Worker message:`, type);
 
@@ -86,17 +88,39 @@ function TabContent({
         const blob = new Blob([payload.csvString], {
           type: "text/csv;charset=utf-8;",
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `processed_${Date.now()}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        
+        // Use custom filename from modal if provided, otherwise use default
+        const fileName = payload.customFileName || `processed_${Date.now()}.csv`;
+        const destinationPath = payload.destinationPath;
 
-        setSuccessMessage("CSV downloaded!");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        // If user selected a custom folder, use File System Access API
+        if (destinationPath) {
+          try {
+            const fileHandle = await destinationPath.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            
+            setSuccessMessage("CSV downloaded to your chosen folder!");
+            setTimeout(() => setSuccessMessage(null), 3000);
+          } catch (err) {
+            console.error("Error writing to custom folder:", err);
+            setError({
+              title: "Download Error",
+              message: "Failed to save to selected folder. Using default download.",
+            });
+            // Fallback to browser download
+            performBrowserDownload(blob, fileName);
+          }
+        } else {
+          // Use default browser download
+          performBrowserDownload(blob, fileName);
+        }
+        
+        // Save CSV metadata to user's Firestore database with the custom filename
+        saveCsvToHistory(fileName, blob.size).catch(err => {
+          console.error("Failed to save CSV to history:", err);
+        });
       } else if (type === "SUCCESS_GROUPING") {
         setGroupedData(payload.groupedData);
         setDisplayData(null);
@@ -161,7 +185,22 @@ function TabContent({
     onFileLoaded?.(file.name);
   }, [tabId, onFileLoaded]);
 
-  const handleProcessRequest = useCallback((type, payload) => {
+  // Helper function to perform browser download
+  const performBrowserDownload = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    setSuccessMessage("CSV downloaded!");
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
+
+  const handleProcessRequest = useCallback((type, payload = {}) => {
     setIsProcessing(true);
     setError(null);
     setSuccessMessage(null);
@@ -377,7 +416,7 @@ function TabContent({
       {/* Undo/Redo & Edit Mode */}
       {dataSummary && displayData && !groupedData && !pivotData && !chartData && (
         <div className="mt-6 mb-4">
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 mb-4">
+          <div className="flex items-center justify-between p-4 bg-linear-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 mb-4">
             <div className="flex items-center gap-3">
               <button onClick={handleUndo} disabled={!canUndo} className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors" title="Undo (Ctrl+Z)">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,7 +436,7 @@ function TabContent({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+          <div className="flex items-center justify-between p-4 bg-linear-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${isEditMode ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
               <div>

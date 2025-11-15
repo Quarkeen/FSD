@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+import DownloadModal from '../DownloadModal';
 
 function DownloadSection({ isProcessing, downloading, setDownloading, onProcess }) {
+  const [showModal, setShowModal] = useState(false);
+
   const handleDownloadClick = () => {
+    setShowModal(true);
+  };
+
+  const handleConfirmDownload = (fileName, destinationPath) => {
     setDownloading(true);
-    onProcess('DOWNLOAD_FILE');
+    setShowModal(false);
+    onProcess('DOWNLOAD_FILE', { customFileName: fileName, destinationPath });
     setTimeout(() => setDownloading(false), 2000);
+  };
+
+  const handleCancelDownload = () => {
+    setShowModal(false);
   };
 
   return (
@@ -21,6 +33,13 @@ function DownloadSection({ isProcessing, downloading, setDownloading, onProcess 
       >
         {downloading || isProcessing ? 'Preparing...' : 'Download Processed CSV'}
       </button>
+      
+      <DownloadModal
+        isOpen={showModal}
+        onConfirm={handleConfirmDownload}
+        onCancel={handleCancelDownload}
+        isProcessing={isProcessing || downloading}
+      />
     </div>
   );
 }

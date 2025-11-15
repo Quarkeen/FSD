@@ -107,6 +107,7 @@ function DynamicControlPanel({ summary, isProcessing, onProcess, hiddenColumns =
         allHeaders={allHeaders}
         numericHeaders={numericHeaders}
         onProcess={onProcess}
+        worker={worker}
       />
 
       <Statistics

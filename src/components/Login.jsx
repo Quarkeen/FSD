@@ -55,14 +55,14 @@ export default function Login() {
     setError("");
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="relative flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
+    <div className="relative flex justify-center items-center min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 overflow-hidden">
       {/* Bubble container */}
       <div className="bubble-container absolute inset-0 pointer-events-none"></div>
       
@@ -172,7 +172,7 @@ export default function Login() {
           </button>
         </div>
 
-        <button className="w-full bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:via-violet-700 hover:to-indigo-700 transform transition duration-200 active:scale-95 shadow-lg">
+        <button className="w-full bg-linear-to-r from-purple-600 via-violet-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:via-violet-700 hover:to-indigo-700 transform transition duration-200 active:scale-95 shadow-lg">
           Sign In
         </button>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DataChat from '../../DataChat/DataChat';
 import AddRowForm from './AddRowForm';
 import AddColumnForm from './AddColumnForm';
@@ -9,7 +9,14 @@ import PivotTableForm from './PivotTableForm';
 import ChartForm from './ChartForm';
 import MergeForm from './MergeForm';
 
-function AdvancedTools({ summary, data, allHeaders, numericHeaders, onProcess }) {
+function AdvancedTools({ 
+  summary, 
+  data, 
+  allHeaders, 
+  numericHeaders, 
+  onProcess,
+  worker  // ADD: Accept worker prop
+}) {
   const [activeTool, setActiveTool] = useState(null);
   const [showChat, setShowChat] = useState(false);
 
@@ -98,16 +105,68 @@ function AdvancedTools({ summary, data, allHeaders, numericHeaders, onProcess })
         </button>
       </div>
 
-      {showChat && <DataChat summary={summary} data={data ? data.slice(0, 20) : []} onClose={handleToggleChat} />}
+      {showChat && (
+        <DataChat 
+          summary={summary} 
+          data={data ? data.slice(0, 20) : []} 
+          onClose={handleToggleChat} 
+        />
+      )}
 
-      {activeTool === 'add_row' && <AddRowForm allHeaders={allHeaders} onProcess={onProcess} setActiveTool={setActiveTool} />}
-      {activeTool === 'add_column' && <AddColumnForm onProcess={onProcess} setActiveTool={setActiveTool} />}
-      {activeTool === 'formula' && <FormulaColumnForm onProcess={onProcess} setActiveTool={setActiveTool} />}
-      {activeTool === 'format' && <ConditionalFormattingForm allHeaders={allHeaders} onProcess={onProcess} />}
-      {activeTool === 'group' && <GroupingForm allHeaders={allHeaders} numericHeaders={numericHeaders} onProcess={onProcess} />}
-      {activeTool === 'pivot' && <PivotTableForm allHeaders={allHeaders} numericHeaders={numericHeaders} onProcess={onProcess} />}
-      {activeTool === 'chart' && <ChartForm allHeaders={allHeaders} numericHeaders={numericHeaders} onProcess={onProcess} />}
-      {activeTool === 'merge' && <MergeForm allHeaders={allHeaders} onProcess={onProcess} setActiveTool={setActiveTool} />}
+      {activeTool === 'add_row' && (
+        <AddRowForm 
+          allHeaders={allHeaders} 
+          onProcess={onProcess} 
+          setActiveTool={setActiveTool} 
+        />
+      )}
+      {activeTool === 'add_column' && (
+        <AddColumnForm 
+          onProcess={onProcess} 
+          setActiveTool={setActiveTool} 
+        />
+      )}
+      {activeTool === 'formula' && (
+        <FormulaColumnForm 
+          onProcess={onProcess} 
+          setActiveTool={setActiveTool} 
+        />
+      )}
+      {activeTool === 'format' && (
+        <ConditionalFormattingForm 
+          allHeaders={allHeaders} 
+          onProcess={onProcess} 
+        />
+      )}
+      {activeTool === 'group' && (
+        <GroupingForm 
+          allHeaders={allHeaders} 
+          numericHeaders={numericHeaders} 
+          onProcess={onProcess} 
+        />
+      )}
+      {activeTool === 'pivot' && (
+        <PivotTableForm 
+          allHeaders={allHeaders} 
+          numericHeaders={numericHeaders} 
+          onProcess={onProcess} 
+        />
+      )}
+      {activeTool === 'chart' && (
+        <ChartForm 
+          allHeaders={allHeaders} 
+          numericHeaders={numericHeaders} 
+          onProcess={onProcess} 
+        />
+      )}
+      {activeTool === 'merge' && (
+        <MergeForm 
+          allHeaders={allHeaders} 
+          onProcess={onProcess} 
+          setActiveTool={setActiveTool}
+          worker={worker}  // UPDATED: Pass worker prop to MergeForm
+        />
+      )}
     </div>
   );
 }
