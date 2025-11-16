@@ -95,7 +95,7 @@ export default function Signup() {
 
     try {
       await signup(email, password, username);
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       setError(err.message);
     }
@@ -211,6 +211,7 @@ export default function Signup() {
           </label>
           <input
             type="text"
+            autoComplete="username"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Choose your username"
             value={username}
@@ -225,6 +226,7 @@ export default function Signup() {
           </label>
           <input
             type="email"
+            autoComplete="email"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="abc@gmail.com"
             value={email}
@@ -239,6 +241,7 @@ export default function Signup() {
           </label>
           <input
             type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Create a strong password"
             value={password}
@@ -260,6 +263,7 @@ export default function Signup() {
           </label>
           <input
             type={showConfirmPassword ? "text" : "password"}
+            autoComplete="new-password"
             className="w-full border-2 border-gray-300 p-3 rounded-lg focus:border-gray-600 outline-none"
             placeholder="Re-enter your password"
             value={confirmPassword}

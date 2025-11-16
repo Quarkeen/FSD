@@ -49,33 +49,41 @@ function AppMain() {
   return (
     <Router>
       <Routes>
-        {/* Public routes - only accessible when logged out */}
-        {!user && (
-          <>
-            <Route
-              path="/login"
-              element={<Login />}
-            />
-            <Route
-              path="/signup"
-              element={<Signup />}
-            />
-          </>
-        )}
+        {/* Public routes - accessible to everyone */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          }
+        />
 
-        {/* Protected main app - only accessible when logged in */}
-        {user && (
-          <>
-            <Route
-              path="/"
-              element={<App />}
-            />
-            <Route
-              path="/signout"
-              element={<SignOut />}
-            />
-          </>
-        )}
+        {/* Protected routes - only accessible when logged in */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <App />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/signout"
+          element={
+            <PrivateRoute>
+              <SignOut />
+            </PrivateRoute>
+          }
+        />
 
         {/* Redirect based on auth state */}
         <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />

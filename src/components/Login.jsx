@@ -173,6 +173,7 @@ export default function Login() {
             <label className="block text-black font-semibold mb-2">Email</label>
             <input
               type="email"
+              autoComplete="email"
               className="w-full border border-gray-300 p-3 rounded-xl text-black"
               placeholder="abc@gmail.com"
               value={email}
@@ -184,6 +185,7 @@ export default function Login() {
             <label className="block text-black font-semibold mb-2">Password</label>
             <input
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               className="w-full border border-gray-300 p-3 rounded-xl text-black"
               placeholder="Enter password"
               value={password}
@@ -201,14 +203,6 @@ export default function Login() {
           <button className="w-full py-3 rounded-xl bg-black text-white font-semibold">
             Sign In
           </button>
-
-          <div className="login-center-buttons flex items-center justify-center my-4">
-         
-            <button className="flex items-center justify-center p-5" type="button">
-                 <span> or </span>
-              <img className="px-4" src={GoogleSvg} alt="" />Log In with Google
-            </button>
-          </div>
 
           <div className="text-center mt-4 text-sm text-black">
             Don't have an account?{" "}

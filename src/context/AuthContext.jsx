@@ -22,8 +22,8 @@ export const AuthProvider = ({ children }) => {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     // Set the username as display name
     await updateProfile(result.user, { displayName: username });
-    // Reload user to ensure displayName is persisted in the auth token
-    await reload(result.user);
+    // Sign out immediately after signup so user goes to login page
+    await signOut(auth);
     return result;
   };
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
